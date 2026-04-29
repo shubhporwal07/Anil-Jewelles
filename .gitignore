@@ -1,0 +1,60 @@
+# ========================
+# Frontend (React + Vite)
+# ========================
+
+# Dependencies
+frontend/node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Environment variables (DO NOT COMMIT)
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Firebase service account keys (DO NOT COMMIT)
+*-firebase-adminsdk-*.json
+frontend/scripts/*-firebase-adminsdk-*.json
+
+# Build output
+frontend/dist
+frontend/dist-ssr
+*.local
+
+# Vite
+frontend/.vite
+
+# ========================
+# Backend (Firebase Cloud Functions)
+# ========================
+
+# Dependencies
+backend/functions/node_modules
+backend/functions/package-lock.json
+backend/node_modules
+backend/package-lock.json
+
+# Firebase
+backend/.firebase/
+backend/.firebaserc
+
+# Environment
+backend/.env
+
+# ========================
+# IDE & OS
+# ========================
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
