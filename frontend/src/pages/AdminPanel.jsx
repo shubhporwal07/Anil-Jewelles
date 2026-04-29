@@ -179,16 +179,18 @@ export default function AdminPanel({ onLogout }) {
 
   const filteredProducts = useMemo(() => {
     if (!q) return products;
+    if (!isGlobalSearch && activeTab !== 'products') return products;
     return products.filter(p =>
       (p.name || '').toLowerCase().includes(q) ||
       (p.category || '').toLowerCase().includes(q) ||
       (p.metalType || '').toLowerCase().includes(q) ||
       String(p.price || '').includes(q)
     );
-  }, [products, q]);
+  }, [products, q, isGlobalSearch, activeTab]);
 
   const filteredOrders = useMemo(() => {
     if (!q) return orders;
+    if (!isGlobalSearch && activeTab !== 'orders') return orders;
     return orders.filter(o =>
       (o.userName || '').toLowerCase().includes(q) ||
       (o.userEmail || '').toLowerCase().includes(q) ||
@@ -196,23 +198,25 @@ export default function AdminPanel({ onLogout }) {
       (o.status || '').toLowerCase().includes(q) ||
       String(o.amount || '').includes(q)
     );
-  }, [orders, q]);
+  }, [orders, q, isGlobalSearch, activeTab]);
 
   const filteredFeedback = useMemo(() => {
     if (!q) return feedback;
+    if (!isGlobalSearch && activeTab !== 'feedback') return feedback;
     return feedback.filter(f =>
       (f.userName || '').toLowerCase().includes(q) ||
       (f.userEmail || '').toLowerCase().includes(q) ||
       (f.message || '').toLowerCase().includes(q)
     );
-  }, [feedback, q]);
+  }, [feedback, q, isGlobalSearch, activeTab]);
 
   const filteredSubscribers = useMemo(() => {
     if (!q) return subscribers;
+    if (!isGlobalSearch && activeTab !== 'subscribers') return subscribers;
     return subscribers.filter(s =>
       (s.email || '').toLowerCase().includes(q)
     );
-  }, [subscribers, q]);
+  }, [subscribers, q, isGlobalSearch, activeTab]);
 
   // When global search is on and there's a query, determine which cross-sections have results
   const showCrossProducts = isGlobalSearch && q && activeTab !== 'products' && filteredProducts.length > 0;
@@ -236,19 +240,19 @@ export default function AdminPanel({ onLogout }) {
 
       {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">ANIL JEWELLER&apos;S Admin</h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">Manage your jewelry inventory</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-row justify-between items-center">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">ANIL JEWELLER&apos;S Admin</h1>
+            <p className="text-[11px] sm:text-sm text-gray-600 mt-0.5">Manage your jewelry inventory</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
+            className="flex items-center gap-1.5 sm:gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition duration-200 text-xs sm:text-sm shrink-0 ml-3"
           >
-            <LogOut size={18} className="sm:w-5 sm:h-5" />
-            Logout
+            <LogOut size={16} className="sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Logout</span>
           </motion.button>
         </div>
       </div>
@@ -257,63 +261,38 @@ export default function AdminPanel({ onLogout }) {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
         
         {/* Tabs */}
-        <div className="flex space-x-4 border-b border-gray-200 mb-6">
-          <button
-            onClick={() => setActiveTab('products')}
-            className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'products'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <ShoppingBag size={18} />
-            Products
-          </button>
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'orders'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <Package size={18} />
-            Customer Orders
-          </button>
-          <button
-            onClick={() => setActiveTab('feedback')}
-            className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'feedback'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <MessageSquare size={18} />
-            Feedback
-          </button>
-          <button
-            onClick={() => setActiveTab('subscribers')}
-            className={`pb-3 text-sm font-medium transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'subscribers'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <Mail size={18} />
-            Subscribers
-          </button>
+        <div className="flex overflow-x-auto scrollbar-hide gap-1 sm:gap-4 border-b border-gray-200 mb-4 sm:mb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
+          {[
+            { key: 'products', icon: ShoppingBag, label: 'Products' },
+            { key: 'orders', icon: Package, label: 'Orders' },
+            { key: 'feedback', icon: MessageSquare, label: 'Feedback' },
+            { key: 'subscribers', icon: Mail, label: 'Subscribers' },
+          ].map(({ key, icon: Icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`pb-2.5 sm:pb-3 text-xs sm:text-sm font-medium transition-colors border-b-2 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap px-2 sm:px-1 shrink-0 ${
+                activeTab === key
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Icon size={16} className="sm:w-[18px] sm:h-[18px] shrink-0" />
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1">
+        <div className="mb-4 sm:mb-6 flex flex-row items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 min-w-0">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isGlobalSearch ? 'Search across all sections...' : `Search ${activeTab}...`}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder={isGlobalSearch ? 'Search all sections...' : `Search ${activeTab}...`}
+              className="w-full pl-9 pr-8 py-2 sm:py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
             />
             {searchQuery && (
               <button
@@ -327,22 +306,22 @@ export default function AdminPanel({ onLogout }) {
           <button
             type="button"
             onClick={() => setIsGlobalSearch(prev => !prev)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all whitespace-nowrap ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg border text-xs sm:text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
               isGlobalSearch
                 ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
             }`}
             title={isGlobalSearch ? 'Searching all sections' : 'Searching current tab only'}
           >
-            <Globe size={16} />
-            Global
+            <Globe size={14} className="sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Global</span>
           </button>
         </div>
 
         {activeTab === 'products' && (
           <>
             {/* Add Product Button */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6">
           <motion.button
             whileHover={{ y: -1 }}
             whileTap={{ scale: 0.98 }}
@@ -350,9 +329,9 @@ export default function AdminPanel({ onLogout }) {
               setEditingProduct(null);
               setShowAddProduct(true);
             }}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 sm:px-4 rounded-lg transition duration-200 text-xs sm:text-sm"
           >
-            <Plus size={18} className="sm:w-5 sm:h-5" />
+            <Plus size={16} className="sm:w-5 sm:h-5" />
             Add New Product
           </motion.button>
         </div>
@@ -390,17 +369,23 @@ export default function AdminPanel({ onLogout }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {products.length === 0 ? (
+                  {filteredProducts.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm text-gray-500">
-                        No products found. Add your first product!
+                        {q ? 'No products match your search.' : 'No products found. Add your first product!'}
                       </td>
                     </tr>
                   ) : (
-                    products.map(product => (
+                    filteredProducts.map(product => (
                       <tr key={product.id} className="hover:bg-gray-50">
-                        <td className="px-3 sm:px-4 md:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">
-                          <div className="max-w-xs truncate" title={product.name}>{product.name}</div>
+                        <td className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-4 text-xs sm:text-sm text-gray-900 font-medium">
+                          <div className="max-w-[200px] sm:max-w-xs truncate" title={product.name}>{product.name}</div>
+                          {/* Mobile sub-info: category & price */}
+                          <div className="sm:hidden flex items-center gap-2 mt-0.5 text-[11px] text-gray-500">
+                            <span>{product.category}</span>
+                            <span className="text-gray-300">•</span>
+                            <span className="font-semibold text-gray-700">₹{product.price.toLocaleString('en-IN')}</span>
+                          </div>
                         </td>
                         <td className="px-3 sm:px-4 md:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
                           {product.category}
@@ -410,21 +395,11 @@ export default function AdminPanel({ onLogout }) {
                         </td>
                         <td className="px-3 sm:px-4 md:px-6 py-2 sm:py-4 hidden lg:table-cell">
                           {product.imageData ? (
-                            <img
-                              src={product.imageData}
-                              alt={product.name}
-                              className="h-10 w-10 rounded object-cover"
-                            />
+                            <img src={product.imageData} alt={product.name} className="h-10 w-10 rounded object-cover" />
                           ) : product.imageUrl ? (
-                            <img
-                              src={product.imageUrl}
-                              alt={product.name}
-                              className="h-10 w-10 rounded object-cover"
-                            />
+                            <img src={product.imageUrl} alt={product.name} className="h-10 w-10 rounded object-cover" />
                           ) : (
-                            <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-[10px]">
-                              No img
-                            </div>
+                            <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-[10px]">No img</div>
                           )}
                         </td>
                         <td className="px-3 sm:px-4 md:px-6 py-2 sm:py-4 text-center hidden sm:table-cell">
@@ -445,21 +420,23 @@ export default function AdminPanel({ onLogout }) {
                             />
                           </button>
                         </td>
-                        <td className="px-3 sm:px-4 md:px-6 py-2 sm:py-4 text-sm space-x-2 flex">
-                          <button
-                            onClick={() => handleEditProduct(product)}
-                            className="text-blue-600 hover:text-blue-800 transition p-1"
-                            title="Edit product"
-                          >
-                            <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(product.id, product.name)}
-                            className="text-red-600 hover:text-red-800 transition p-1"
-                            title="Delete product"
-                          >
-                            <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
-                          </button>
+                        <td className="px-3 sm:px-4 md:px-6 py-2 sm:py-4">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleEditProduct(product)}
+                              className="text-blue-600 hover:text-blue-800 transition p-1"
+                              title="Edit product"
+                            >
+                              <Edit size={15} className="sm:w-[18px] sm:h-[18px]" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                              className="text-red-600 hover:text-red-800 transition p-1"
+                              title="Delete product"
+                            >
+                              <Trash2 size={15} className="sm:w-[18px] sm:h-[18px]" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -472,20 +449,20 @@ export default function AdminPanel({ onLogout }) {
 
         {/* Statistics */}
         {!productsLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 sm:mt-8">
-            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-              <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Products</p>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">{products.length}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-8">
+            <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+              <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Total Products</p>
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{products.length}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-              <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Inventory Value</p>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">
+            <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+              <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Inventory Value</p>
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 ₹{products.reduce((sum, p) => sum + (p.price || 0), 0).toLocaleString('en-IN')}
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-              <p className="text-gray-600 text-xs sm:text-sm font-medium">Average Price</p>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-2">
+            <div className="bg-white rounded-lg shadow p-3 sm:p-6 col-span-2 sm:col-span-1">
+              <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Average Price</p>
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                 ₹{Math.round(products.reduce((sum, p) => sum + (p.price || 0), 0) / (products.length || 1)).toLocaleString('en-IN')}
               </p>
             </div>
@@ -504,53 +481,55 @@ export default function AdminPanel({ onLogout }) {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Order ID</th>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Customer</th>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Date</th>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Status</th>
-                        <th className="px-4 md:px-6 py-3 text-right font-semibold text-gray-900">Amount</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 hidden md:table-cell">Order ID</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">Customer</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 hidden sm:table-cell">Date</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">Status</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-right text-xs sm:text-sm font-semibold text-gray-900">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {orders.length === 0 ? (
+                      {filteredOrders.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="px-4 md:px-6 py-6 text-center text-gray-500">
-                            No orders found.
+                          <td colSpan="5" className="px-3 sm:px-4 md:px-6 py-6 text-center text-xs sm:text-sm text-gray-500">
+                            {q ? 'No orders match your search.' : 'No orders found.'}
                           </td>
                         </tr>
                       ) : (
-                        orders.map(order => (
+                        filteredOrders.map(order => (
                           <tr key={order.id} className="hover:bg-gray-50">
-                            <td className="px-4 md:px-6 py-4 font-mono text-xs text-gray-600">
-                              {order.razorpayOrderId || order.id}
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-mono text-xs text-gray-600 hidden md:table-cell">
+                              <span className="truncate block max-w-[140px]">{order.razorpayOrderId || order.id}</span>
                             </td>
-                            <td className="px-4 md:px-6 py-4">
-                              <div className="font-medium text-gray-900">{order.userName || 'Guest'}</div>
-                              <div className="text-xs text-gray-500">{order.userEmail}</div>
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                              <div className="text-xs sm:text-sm font-medium text-gray-900">{order.userName || 'Guest'}</div>
+                              <div className="text-[11px] sm:text-xs text-gray-500 truncate max-w-[140px] sm:max-w-none">{order.userEmail}</div>
+                              {/* Mobile-only date */}
+                              <div className="sm:hidden text-[10px] text-gray-400 mt-0.5">
+                                {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </div>
                             </td>
-                            <td className="px-4 md:px-6 py-4 text-gray-600">
-                              {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                                day: 'numeric', month: 'short', year: 'numeric'
-                              })}
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
+                              {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </td>
-                            <td className="px-4 md:px-6 py-4">
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
                               <select
                                 value={order.status}
                                 onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                className={`text-xs font-semibold uppercase rounded-full px-2 py-1 border-none outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 appearance-none ${
+                                className={`text-[10px] sm:text-xs font-semibold uppercase rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 border-none outline-none cursor-pointer focus:ring-2 focus:ring-blue-500 appearance-none ${
                                   order.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
                                   order.status === 'shipped' ? 'bg-blue-50 text-blue-700' :
                                   order.status === 'processing' ? 'bg-amber-50 text-amber-700' :
                                   'bg-slate-100 text-slate-700'
                                 }`}
                               >
-                                <option value="paid">Order Placed</option>
+                                <option value="paid">Placed</option>
                                 <option value="processing">Processing</option>
                                 <option value="shipped">Shipped</option>
                                 <option value="delivered">Delivered</option>
                               </select>
                             </td>
-                            <td className="px-4 md:px-6 py-4 text-right font-semibold text-gray-900">
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-right text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                               ₹{order.amount ? order.amount.toLocaleString('en-IN') : 0}
                             </td>
                           </tr>
@@ -563,20 +542,20 @@ export default function AdminPanel({ onLogout }) {
             )}
             
             {!ordersLoading && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Total Orders</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{orders.length}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-8">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Total Orders</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{orders.length}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Total Revenue</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Total Revenue</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                     ₹{orders.reduce((sum, o) => sum + (o.amount || 0), 0).toLocaleString('en-IN')}
                   </p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Average Order Value</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6 col-span-2 sm:col-span-1">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Avg Order Value</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
                     ₹{orders.length ? Math.round(orders.reduce((sum, o) => sum + (o.amount || 0), 0) / orders.length).toLocaleString('en-IN') : 0}
                   </p>
                 </div>
@@ -595,38 +574,36 @@ export default function AdminPanel({ onLogout }) {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Username</th>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Feedback</th>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Date</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">Username</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">Feedback</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 hidden sm:table-cell">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {feedback.length === 0 ? (
+                      {filteredFeedback.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-4 md:px-6 py-6 text-center text-gray-500">
-                            No feedback found.
+                          <td colSpan="3" className="px-3 sm:px-4 md:px-6 py-6 text-center text-xs sm:text-sm text-gray-500">
+                            {q ? 'No feedback matches your search.' : 'No feedback found.'}
                           </td>
                         </tr>
                       ) : (
-                        feedback.map(item => (
+                        filteredFeedback.map(item => (
                           <tr key={item.id} className="hover:bg-gray-50 align-top">
-                            <td className="px-4 md:px-6 py-4">
-                              <div className="font-medium text-gray-900">{item.userName || 'Guest'}</div>
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                              <div className="text-xs sm:text-sm font-medium text-gray-900">{item.userName || 'Guest'}</div>
                               {item.userEmail && (
-                                <div className="text-xs text-gray-500">{item.userEmail}</div>
+                                <div className="text-[11px] sm:text-xs text-gray-500 truncate max-w-[120px] sm:max-w-none">{item.userEmail}</div>
                               )}
+                              {/* Mobile date */}
+                              <div className="sm:hidden text-[10px] text-gray-400 mt-0.5">
+                                {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}
+                              </div>
                             </td>
-                            <td className="px-4 md:px-6 py-4 text-gray-700">
-                              <p className="max-w-2xl whitespace-pre-wrap leading-relaxed">{item.message}</p>
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700">
+                              <p className="max-w-[180px] sm:max-w-2xl whitespace-pre-wrap leading-relaxed line-clamp-3 sm:line-clamp-none">{item.message}</p>
                             </td>
-                            <td className="px-4 md:px-6 py-4 text-gray-600 whitespace-nowrap">
-                              {item.submittedAt
-                                ? new Date(item.submittedAt).toLocaleDateString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                  })
-                                : 'Unknown'}
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">
+                              {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}
                             </td>
                           </tr>
                         ))
@@ -638,21 +615,15 @@ export default function AdminPanel({ onLogout }) {
             )}
 
             {!feedbackLoading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Total Feedback</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{feedback.length}</p>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-8">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Total Feedback</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{feedback.length}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Latest Feedback</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {feedback[0]?.submittedAt
-                      ? new Date(feedback[0].submittedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })
-                      : 'None'}
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Latest Feedback</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
+                    {feedback[0]?.submittedAt ? new Date(feedback[0].submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'None'}
                   </p>
                 </div>
               </div>
@@ -670,34 +641,28 @@ export default function AdminPanel({ onLogout }) {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Email</th>
-                        <th className="px-4 md:px-6 py-3 text-left font-semibold text-gray-900">Subscribed On</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">Email</th>
+                        <th className="px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900">Subscribed On</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {subscribers.length === 0 ? (
+                      {filteredSubscribers.length === 0 ? (
                         <tr>
-                          <td colSpan="2" className="px-4 md:px-6 py-6 text-center text-gray-500">
-                            No subscribers yet.
+                          <td colSpan="2" className="px-3 sm:px-4 md:px-6 py-6 text-center text-xs sm:text-sm text-gray-500">
+                            {q ? 'No subscribers match your search.' : 'No subscribers yet.'}
                           </td>
                         </tr>
                       ) : (
-                        subscribers.map(sub => (
+                        filteredSubscribers.map(sub => (
                           <tr key={sub.id} className="hover:bg-gray-50">
-                            <td className="px-4 md:px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                <Mail size={14} className="text-gray-400 flex-shrink-0" />
-                                <span className="font-medium text-gray-900">{sub.email}</span>
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Mail size={14} className="text-gray-400 flex-shrink-0 hidden sm:block" />
+                                <span className="text-xs sm:text-sm font-medium text-gray-900 truncate">{sub.email}</span>
                               </div>
                             </td>
-                            <td className="px-4 md:px-6 py-4 text-gray-600">
-                              {sub.subscribedAt
-                                ? new Date(sub.subscribedAt).toLocaleDateString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                  })
-                                : 'Unknown'}
+                            <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                              {sub.subscribedAt ? new Date(sub.subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}
                             </td>
                           </tr>
                         ))
@@ -709,26 +674,147 @@ export default function AdminPanel({ onLogout }) {
             )}
 
             {!subscribersLoading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Total Subscribers</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{subscribers.length}</p>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-8">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Total Subscribers</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{subscribers.length}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-medium">Latest Subscription</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {subscribers[0]?.subscribedAt
-                      ? new Date(subscribers[0].subscribedAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })
-                      : 'None'}
+                <div className="bg-white rounded-lg shadow p-3 sm:p-6">
+                  <p className="text-gray-600 text-[11px] sm:text-sm font-medium">Latest Subscription</p>
+                  <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
+                    {subscribers[0]?.subscribedAt ? new Date(subscribers[0].subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'None'}
                   </p>
                 </div>
               </div>
             )}
           </>
+        )}
+
+        {/* Cross-section results when Global search is active */}
+        {q && isGlobalSearch && (showCrossProducts || showCrossOrders || showCrossFeedback || showCrossSubscribers) && (
+          <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-6">
+            <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <Globe size={14} />
+              Results from other sections
+            </h3>
+
+            {showCrossProducts && (
+              <div className="bg-white rounded-lg shadow overflow-hidden border border-blue-100">
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+                    <ShoppingBag size={16} />
+                    Products ({filteredProducts.length} result{filteredProducts.length !== 1 ? 's' : ''})
+                  </span>
+                  <span className="text-xs text-blue-600 font-medium">View all →</span>
+                </button>
+                <div className="divide-y">
+                  {filteredProducts.slice(0, 3).map(p => (
+                    <div key={p.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                      <span className="text-gray-900 font-medium truncate max-w-xs">{p.name}</span>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>{p.category}</span>
+                        <span className="font-semibold text-gray-900">₹{p.price.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredProducts.length > 3 && (
+                    <div className="px-4 py-2 text-xs text-gray-400 text-center">
+                      +{filteredProducts.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {showCrossOrders && (
+              <div className="bg-white rounded-lg shadow overflow-hidden border border-blue-100">
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+                    <Package size={16} />
+                    Orders ({filteredOrders.length} result{filteredOrders.length !== 1 ? 's' : ''})
+                  </span>
+                  <span className="text-xs text-blue-600 font-medium">View all →</span>
+                </button>
+                <div className="divide-y">
+                  {filteredOrders.slice(0, 3).map(o => (
+                    <div key={o.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                      <span className="text-gray-900 font-medium">{o.userName || 'Guest'}</span>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span className="uppercase">{o.status}</span>
+                        <span className="font-semibold text-gray-900">₹{(o.amount || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredOrders.length > 3 && (
+                    <div className="px-4 py-2 text-xs text-gray-400 text-center">
+                      +{filteredOrders.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {showCrossFeedback && (
+              <div className="bg-white rounded-lg shadow overflow-hidden border border-blue-100">
+                <button
+                  onClick={() => setActiveTab('feedback')}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+                    <MessageSquare size={16} />
+                    Feedback ({filteredFeedback.length} result{filteredFeedback.length !== 1 ? 's' : ''})
+                  </span>
+                  <span className="text-xs text-blue-600 font-medium">View all →</span>
+                </button>
+                <div className="divide-y">
+                  {filteredFeedback.slice(0, 3).map(f => (
+                    <div key={f.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                      <span className="text-gray-900 font-medium">{f.userName || 'Guest'}</span>
+                      <span className="text-xs text-gray-500 truncate max-w-xs ml-4">{f.message}</span>
+                    </div>
+                  ))}
+                  {filteredFeedback.length > 3 && (
+                    <div className="px-4 py-2 text-xs text-gray-400 text-center">
+                      +{filteredFeedback.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {showCrossSubscribers && (
+              <div className="bg-white rounded-lg shadow overflow-hidden border border-blue-100">
+                <button
+                  onClick={() => setActiveTab('subscribers')}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+                    <Mail size={16} />
+                    Subscribers ({filteredSubscribers.length} result{filteredSubscribers.length !== 1 ? 's' : ''})
+                  </span>
+                  <span className="text-xs text-blue-600 font-medium">View all →</span>
+                </button>
+                <div className="divide-y">
+                  {filteredSubscribers.slice(0, 3).map(s => (
+                    <div key={s.id} className="px-4 py-2.5 text-sm text-gray-900 font-medium">
+                      {s.email}
+                    </div>
+                  ))}
+                  {filteredSubscribers.length > 3 && (
+                    <div className="px-4 py-2 text-xs text-gray-400 text-center">
+                      +{filteredSubscribers.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
