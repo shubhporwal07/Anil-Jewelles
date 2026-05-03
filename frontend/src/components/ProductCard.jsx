@@ -33,6 +33,7 @@ export default function ProductCard({ product, onViewDetails, onEdit, onDelete, 
   };
 
   const imgSrc =
+    (Array.isArray(product.imageDatas) && product.imageDatas[0]) ||
     product.imageData ||
     product.imageUrl ||
     'https://via.placeholder.com/400x400?text=ANIL+JEWELLERS';
@@ -68,11 +69,34 @@ export default function ProductCard({ product, onViewDetails, onEdit, onDelete, 
         />
         {/* Sold Out Overlay */}
         {isSoldOut && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10">
-            <span className="bg-slate-900/90 text-white text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] px-5 py-2 rounded-full border border-white/20">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="absolute inset-0 z-10 overflow-hidden bg-black/30 backdrop-blur-[2px]"
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.06)_38%,rgba(0,0,0,0.08)_100%)]" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, rotate: -8 }}
+                animate={{ opacity: 1, scale: 1, rotate: -8 }}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                className="flex items-center justify-center rounded-lg border-2 border-white/85 bg-slate-900/88 px-4 py-1.5 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:px-6 sm:py-2"
+              >
+                <span className="text-sm font-bold uppercase tracking-[0.32em] text-white sm:text-base">
+                  Sold Out
+                </span>
+              </motion.div>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, x: 12, y: -10 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.05, ease: 'easeOut' }}
+              className="absolute right-4 top-4 rounded-full bg-white/90 px-4 py-1.5 text-sm font-semibold text-stone-700 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+            >
               Sold Out
-            </span>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
         {isAdmin && (
           <div className="absolute left-2 top-2 flex gap-2">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useProducts } from '../contexts/ProductContext';
 import DesignerAlert from './DesignerAlert';
 
@@ -8,9 +8,11 @@ export default function ProductDetailsModal({ product, onClose, onSelectProduct 
   const { addToCart, filteredProducts } = useProducts();
   const [selectedSize, setSelectedSize] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     setSelectedSize('');
+    setCurrentImageIndex(0);
   }, [product?.id]);
 
   useEffect(() => {
@@ -51,6 +53,23 @@ export default function ProductDetailsModal({ product, onClose, onSelectProduct 
 
   const isSoldOut = product.inStock === false;
 
+  const allImages = (Array.isArray(product.imageDatas) && product.imageDatas.length > 0) 
+    ? product.imageDatas 
+    : (product.imageData ? [product.imageData] : []);
+  const currentImage = allImages[currentImageIndex] || (product.imageData || product.imageUrl || 'https://via.placeholder.com/400x400?text=Product');
+
+  const handleNextImage = () => {
+    if (allImages.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (allImages.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    }
+  };
+
   return (
     <motion.div
         initial={{ opacity: 0 }}
@@ -80,22 +99,78 @@ export default function ProductDetailsModal({ product, onClose, onSelectProduct 
             </motion.button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 p-4 sm:p-5 md:p-6 min-h-0 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6 md:p-6 pt-12 sm:pt-12 md:pt-6 min-h-0 overflow-y-auto">
             {/* Left - Product Image */}
-            <div className="h-full flex flex-col order-1 pt-10 md:pt-0">
-              <div className="bg-gray-100 rounded-xl overflow-hidden flex-1 flex items-center justify-center min-h-[300px]">
+            <div className="h-full flex flex-col order-1">
+              <div className="rounded-xl overflow-hidden flex-1 flex items-center justify-center relative group">
                 <img
-                  src={product.imageData || product.imageUrl || 'https://via.placeholder.com/400x400?text=Product'}
+                  src={currentImage}
                   alt={product.name}
                   className="w-full h-full object-contain"
                 />
+                
+                {/* Image Navigation */}
+                {allImages.length > 1 && (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handlePrevImage}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-900" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleNextImage}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-900" />
+                    </motion.button>
+                  </>
+                )}
+                
+                {/* Image Counter */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-3 right-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium">
+                    {currentImageIndex + 1} / {allImages.length}
+                  </div>
+                )}
               </div>
+
+              {/* Image Thumbnails */}
+              {allImages.length > 1 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                  {allImages.map((img, index) => (
+                    <motion.button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 overflow-hidden transition-all ${
+                        currentImageIndex === index
+                          ? 'border-slate-900 shadow-md'
+                          : 'border-gray-200 hover:border-gray-400'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${product.name} - Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </motion.button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right - Product Details */}
-            <div className="h-full order-2 flex flex-col pt-10 md:pt-8">
+            <div className="h-full order-2 flex flex-col pt-12 md:pt-0">
               {/* Product Name & Info */}
-              <div className="mb-4 sm:mb-6">
+              <div className="mb-4 sm:mb-6 pt-4 sm:pt-6">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-light tracking-wide text-gray-900 mb-2 sm:mb-3">
                   {product.name}
                 </h1>
@@ -181,9 +256,9 @@ export default function ProductDetailsModal({ product, onClose, onSelectProduct 
                         onClick={() => onSelectProduct?.(relatedProduct)}
                         className="flex flex-col gap-2 group"
                       >
-                        <div className="bg-gray-100 aspect-square rounded-lg flex items-center justify-center overflow-hidden border border-gray-50 group-hover:border-gray-200 transition-colors">
+                        <div className="bg-white aspect-square rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-gray-200 transition-colors">
                           <img
-                            src={relatedProduct.imageData || relatedProduct.imageUrl || 'https://via.placeholder.com/200x200?text=Product'}
+                            src={(Array.isArray(relatedProduct.imageDatas) && relatedProduct.imageDatas[0]) || relatedProduct.imageData || relatedProduct.imageUrl || 'https://via.placeholder.com/200x200?text=Product'}
                             alt={relatedProduct.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           />

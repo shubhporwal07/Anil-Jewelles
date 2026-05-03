@@ -5,8 +5,41 @@ import { realtimeDb } from '../config/firebase';
 // Create Product Context
 const ProductContext = createContext(null);
 const PRODUCTS_CACHE_KEY = 'apj_products_cache_v1';
-const DB_TIMEOUT_MS = 10000;
+const DB_TIMEOUT_MS = 45000; // Increased for multiple large images
 const LOCAL_PRODUCTS_KEY = 'apj_local_products';
+
+// Compress image before converting to base64
+const compressImage = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      
+      // Resize if image is too large (max 1200px width)
+      const maxWidth = 1200;
+      if (width > maxWidth) {
+        height = (maxWidth / width) * height;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Compress to JPEG with quality 0.85
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      resolve(compressedDataUrl);
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = e.target.result;
+  };
+  reader.onerror = () => reject(new Error('Failed to read file'));
+  reader.readAsDataURL(file);
+});
 
 const normalizeProductData = (id, data) => ({
   id,
@@ -276,7 +309,7 @@ export function ProductProvider({ children }) {
   }, [filters, sortBy]);
 
   // Add product to Realtime Database
-  const addProduct = async (productData, imageFile) => {
+  const addProduct = async (productData, imageFiles) => {
     setLoading(true);
     setError(null);
     try {
@@ -284,9 +317,19 @@ export function ProductProvider({ children }) {
       const newProductRef = push(productsRef);
       const productId = newProductRef.key;
 
-      let imageData = productData.imageData || '';
-      if (imageFile) {
-        imageData = await fileToDataUrl(imageFile);
+      let imageDatas = [];
+      if (Array.isArray(imageFiles) && imageFiles.length > 0) {
+        for (const file of imageFiles) {
+          try {
+            const compressedImage = await compressImage(file);
+            imageDatas.push(compressedImage);
+          } catch (err) {
+            console.warn('Image compression failed, using original:', err);
+            imageDatas.push(await fileToDataUrl(file));
+          }
+        }
+      } else if (productData.imageData) {
+        imageDatas = [productData.imageData];
       }
 
       const nowIso = new Date().toISOString();
@@ -296,8 +339,9 @@ export function ProductProvider({ children }) {
         diamondWeight: parseFloat(productData.diamondWeight || 0),
         imageUrl: '',
         imageStoragePath: '',
-        imageDbPath: `products/${productId}/imageData`,
-        imageData,
+        imageDbPath: `products/${productId}/imageDatas`,
+        imageDatas,
+        imageData: imageDatas[0] || '',
         createdAt: nowIso,
         updatedAt: nowIso,
       };
@@ -314,9 +358,19 @@ export function ProductProvider({ children }) {
     } catch (err) {
       if (isPermissionDeniedError(err)) {
         const localProducts = loadLocalProducts();
-        let imageData = productData.imageData || '';
-        if (imageFile) {
-          imageData = await fileToDataUrl(imageFile);
+        let imageDatas = [];
+        if (Array.isArray(imageFiles) && imageFiles.length > 0) {
+          for (const file of imageFiles) {
+            try {
+              const compressedImage = await compressImage(file);
+              imageDatas.push(compressedImage);
+            } catch (err) {
+              console.warn('Image compression failed, using original:', err);
+              imageDatas.push(await fileToDataUrl(file));
+            }
+          }
+        } else if (productData.imageData) {
+          imageDatas = [productData.imageData];
         }
 
         const localId = `local_${Date.now()}`;
@@ -328,8 +382,9 @@ export function ProductProvider({ children }) {
           diamondWeight: parseFloat(productData.diamondWeight || 0),
           imageUrl: '',
           imageStoragePath: '',
-          imageDbPath: `products/${localId}/imageData`,
-          imageData,
+          imageDbPath: `products/${localId}/imageDatas`,
+          imageDatas,
+          imageData: imageDatas[0] || '',
           createdAt: nowIso,
           updatedAt: nowIso,
           _source: 'local',
@@ -355,15 +410,28 @@ export function ProductProvider({ children }) {
   };
 
   // Edit product in Realtime Database
-  const editProduct = async (productId, productData, imageFile) => {
+  const editProduct = async (productId, productData, imageFiles) => {
     setLoading(true);
     setError(null);
     try {
       const existing = products.find((p) => p.id === productId);
 
-      let imageData = existing?.imageData || productData.imageData || '';
-      if (imageFile) {
-        imageData = await fileToDataUrl(imageFile);
+      let imageDatas = existing?.imageDatas || [];
+      if (Array.isArray(imageFiles) && imageFiles.length > 0) {
+        // Append new images to existing ones instead of replacing
+        for (const file of imageFiles) {
+          try {
+            const compressedImage = await compressImage(file);
+            imageDatas.push(compressedImage);
+          } catch (err) {
+            console.warn('Image compression failed, using original:', err);
+            imageDatas.push(await fileToDataUrl(file));
+          }
+        }
+      } else if (!imageDatas.length && existing?.imageData) {
+        imageDatas = [existing.imageData];
+      } else if (!imageDatas.length && productData.imageData) {
+        imageDatas = [productData.imageData];
       }
 
       const updateData = {
@@ -372,8 +440,9 @@ export function ProductProvider({ children }) {
         diamondWeight: parseFloat(productData.diamondWeight || 0),
         imageUrl: '',
         imageStoragePath: '',
-        imageDbPath: `products/${productId}/imageData`,
-        imageData,
+        imageDbPath: `products/${productId}/imageDatas`,
+        imageDatas,
+        imageData: imageDatas[0] || '',
         updatedAt: new Date().toISOString(),
       };
 
@@ -394,9 +463,22 @@ export function ProductProvider({ children }) {
         const localProducts = loadLocalProducts();
         const existingLocal = localProducts.find((p) => p.id === productId) || products.find((p) => p.id === productId);
 
-        let imageData = existingLocal?.imageData || productData.imageData || '';
-        if (imageFile) {
-          imageData = await fileToDataUrl(imageFile);
+        let imageDatas = existingLocal?.imageDatas || [];
+        if (Array.isArray(imageFiles) && imageFiles.length > 0) {
+          // Append new images to existing ones instead of replacing
+          for (const file of imageFiles) {
+            try {
+              const compressedImage = await compressImage(file);
+              imageDatas.push(compressedImage);
+            } catch (err) {
+              console.warn('Image compression failed, using original:', err);
+              imageDatas.push(await fileToDataUrl(file));
+            }
+          }
+        } else if (!imageDatas.length && existingLocal?.imageData) {
+          imageDatas = [existingLocal.imageData];
+        } else if (!imageDatas.length && productData.imageData) {
+          imageDatas = [productData.imageData];
         }
 
         const localUpdated = {
@@ -407,8 +489,9 @@ export function ProductProvider({ children }) {
           diamondWeight: parseFloat(productData.diamondWeight || 0),
           imageUrl: '',
           imageStoragePath: '',
-          imageDbPath: `products/${productId}/imageData`,
-          imageData,
+          imageDbPath: `products/${productId}/imageDatas`,
+          imageDatas,
+          imageData: imageDatas[0] || '',
           updatedAt: new Date().toISOString(),
           _source: 'local',
         };
@@ -433,7 +516,7 @@ export function ProductProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   // Delete product from Realtime Database
   const deleteProduct = async (productId) => {

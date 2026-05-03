@@ -10,11 +10,12 @@ import ProductGrid from '../components/ProductGrid';
 import AdminAddProductModal from '../components/AdminAddProductModal';
 import ProductDetailsModal from '../components/ProductDetailsModal';
 import CartAddedPopup from '../components/CartAddedPopup';
+import AnnouncementPopup from '../components/AnnouncementPopup';
 import { Plus } from 'lucide-react';
 import Footer from '../components/Footer';
 
 export default function DashboardPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [searchParams] = useSearchParams();
   const { deleteProduct, error, applyNavCategorySlug, cartNotice, clearCartNotice } = useProducts();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -64,6 +65,7 @@ export default function DashboardPage() {
       className="min-h-screen bg-[#f5f5f5]"
     >
       <Navbar />
+      <AnnouncementPopup userId={user?.uid} />
 
       {error && (
         <div className="mx-auto max-w-[1500px] px-4 py-2 text-center text-sm text-amber-800 sm:px-6 lg:px-8">

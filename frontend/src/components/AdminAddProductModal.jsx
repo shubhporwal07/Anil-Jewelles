@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X, Upload } from 'lucide-react';
 import { useProducts } from '../contexts/ProductContext';
 
-export default function AdminAddProductModal({ isOpen, onClose, editProduct = null }) {
+export default function AdminAddProductModal({ isOpen, onClose, editProduct = null, onSaved = null }) {
   const [loading, setLoading] = useState(false);
   const { addProduct, editProduct: updateProduct } = useProducts();
 
@@ -20,8 +20,8 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
     inStock: true,
   });
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -39,7 +39,8 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
         imageDbPath: editProduct.imageDbPath || '',
         inStock: editProduct.inStock !== undefined ? editProduct.inStock : true,
       });
-      setImagePreview(editProduct.imageUrl || editProduct.imageData);
+      const existingImages = editProduct.imageDatas || (editProduct.imageData ? [editProduct.imageData] : []);
+      setImagePreviews(existingImages);
     } else {
       setFormData({
         name: '',
@@ -53,9 +54,9 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
         imageDbPath: '',
         inStock: true,
       });
-      setImagePreview(null);
+      setImagePreviews([]);
     }
-    setImageFile(null);
+    setImageFiles([]);
     setError('');
     setSuccess('');
   }, [editProduct, isOpen]);
@@ -69,15 +70,38 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target.result);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files);
+    const MAX_IMAGES = 4;
+    
+    if (imagePreviews.length >= MAX_IMAGES) {
+      setError(`Maximum ${MAX_IMAGES} images allowed. Remove some images to add more.`);
+      return;
     }
+    
+    if (files.length > 0) {
+      const remainingSlots = MAX_IMAGES - imagePreviews.length;
+      const filesToAdd = files.slice(0, remainingSlots);
+      
+      if (files.length > remainingSlots) {
+        setError(`You can only add ${remainingSlots} more image(s). Maximum is ${MAX_IMAGES} images.`);
+      } else {
+        setError('');
+      }
+      
+      setImageFiles(prev => [...prev, ...filesToAdd]);
+      filesToAdd.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImagePreviews(prev => [...prev, event.target.result]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index) => {
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const validateForm = () => {
@@ -89,8 +113,8 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
       setError('Valid price is required');
       return false;
     }
-    if (!imageFile && !editProduct && !formData.imageUrl) {
-      setError('Product image is required');
+    if (imagePreviews.length === 0 && !editProduct && !formData.imageUrl) {
+      setError('At least one product image is required');
       return false;
     }
     return true;
@@ -121,11 +145,13 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
       };
 
       if (editProduct) {
-        await updateProduct(editProduct.id, productData, imageFile);
+        await updateProduct(editProduct.id, productData, imageFiles);
         setSuccess('Product updated successfully!');
+        onSaved?.('updated');
       } else {
-        await addProduct(productData, imageFile);
+        await addProduct(productData, imageFiles);
         setSuccess('Product added successfully!');
+        onSaved?.('added');
       }
 
       // Close modal after success
@@ -329,29 +355,50 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
             </button>
           </div>
 
-          {/* Image Upload */}
+          {/* Multiple Images Upload */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-              Product Image {!editProduct && '*'}
+              Product Images {!editProduct && '*'} (Upload up to 4 images - {imagePreviews.length}/4)
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6">
-              {imagePreview ? (
+              {imagePreviews.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-32 sm:h-40 md:h-48 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    className="w-full py-2 px-3 sm:px-4 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition text-xs sm:text-sm"
-                  >
-                    Remove Image
-                  </button>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 sm:h-32 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {imagePreviews.length < 4 && (
+                    <label className="cursor-pointer flex flex-col items-center gap-2 sm:gap-3 p-4 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                      <Upload className="w-5 h-5 text-gray-400" />
+                      <p className="text-xs sm:text-sm font-medium text-gray-700">Add more images</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                  {imagePreviews.length === 4 && (
+                    <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-xs sm:text-sm text-center">
+                      Maximum 4 images reached. Remove an image to add more.
+                    </div>
+                  )}
                 </div>
               ) : (
                 <label className="cursor-pointer flex flex-col items-center gap-2 sm:gap-3">
@@ -360,11 +407,12 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
                     <p className="text-xs sm:text-sm font-medium text-gray-700">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1">PNG, JPG up to 10MB</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Select multiple PNG, JPG files (up to 4 images, 10MB each)</p>
                   </div>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageChange}
                     className="hidden"
                   />

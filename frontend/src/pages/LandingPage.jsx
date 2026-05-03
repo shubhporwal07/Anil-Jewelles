@@ -46,26 +46,26 @@ const bestSellers = [
   {
     id: 'bs-1',
     name: 'Solstice Diamond Ring',
-    price: 124900,
     image: '/images/solstice_diamond_ring.png',
+    to: '/dashboard?category=rings',
   },
   {
     id: 'bs-2',
     name: 'Aurora Pearl Strand',
-    price: 89900,
     image: '/images/aurora_pearl_strand.png',
+    to: '/dashboard?category=necklace',
   },
   {
     id: 'bs-3',
     name: 'Celeste Gold Bracelet',
-    price: 67900,
     image: '/images/celeste_gold_bracelet.png',
+    to: '/dashboard?category=necklace',
   },
   {
     id: 'bs-4',
     name: 'Éclat Drop Earrings',
-    price: 45900,
     image: '/images/eclat_drop_earrings.png',
+    to: '/dashboard?category=earrings',
   },
 ];
 
@@ -77,16 +77,9 @@ const commitments = [
   { icon: ShoppingBag, label: 'Timeless design' },
 ];
 
-function formatPriceINR(value) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 export default function LandingPage() {
   const navigate = useNavigate();
+  const MotionLink = motion(Link);
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] text-stone-900 font-sans">
@@ -249,10 +242,11 @@ export default function LandingPage() {
 
         <div className="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {bestSellers.map((item) => (
-            <motion.article
+            <MotionLink
               key={item.id}
+              to={item.to}
               variants={fadeInUp}
-                className="group overflow-hidden rounded-2xl border border-[#d9ccb9] bg-[#f5f5f5] shadow-[0_14px_40px_-28px_rgba(0,0,0,0.22)]"
+              className="group overflow-hidden rounded-2xl border border-[#d9ccb9] bg-[#f5f5f5] shadow-[0_14px_40px_-28px_rgba(0,0,0,0.22)] transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(0,0,0,0.28)]"
             >
               <img
                 src={item.image}
@@ -267,9 +261,8 @@ export default function LandingPage() {
               <div className="p-4 sm:p-5">
                 <p className="text-[0.65rem] sm:text-[0.68rem] uppercase tracking-[0.24em] text-stone-500">Best seller</p>
                 <h3 className="mt-2 font-serif text-lg sm:text-2xl uppercase leading-none text-stone-900">{item.name}</h3>
-                <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-stone-700">{formatPriceINR(item.price)}</p>
               </div>
-            </motion.article>
+            </MotionLink>
           ))}
         </div>
       </motion.section>
