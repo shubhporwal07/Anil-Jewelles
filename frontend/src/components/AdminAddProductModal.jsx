@@ -245,7 +245,7 @@ export default function AdminAddProductModal({ isOpen, onClose, editProduct = nu
           {/* Price */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-              Price (USD) *
+              Price (INR) *
             </label>
             <input
               type="number"
