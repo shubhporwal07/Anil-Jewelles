@@ -139,17 +139,17 @@ export default function ProductCard({ product, onViewDetails, onEdit, onDelete, 
               <button
                 type="button"
                 disabled
-                className="flex-1 rounded-xl bg-slate-400 py-2.5 text-sm font-semibold text-white cursor-not-allowed opacity-80"
+                className="luxury-btn flex-1 secondary cursor-not-allowed opacity-80"
               >
-                Sold Out
+                <span>Sold Out</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex-1 rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="luxury-btn primary flex-1"
               >
-                Add to Bag
+                <span>Add to Bag</span>
               </button>
             )}
             <button
@@ -158,9 +158,9 @@ export default function ProductCard({ product, onViewDetails, onEdit, onDelete, 
                 e.stopPropagation();
                 openDetails();
               }}
-              className="flex-1 rounded-xl border border-slate-900 bg-[#f5f5f5] py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-black/5"
+              className="luxury-btn secondary flex-1"
             >
-              View Details
+              <span>View Details</span>
             </button>
           </div>
         </div>

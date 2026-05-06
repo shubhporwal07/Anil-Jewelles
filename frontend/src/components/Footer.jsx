@@ -32,27 +32,26 @@ export default function Footer() {
     setStatus('loading');
     
     try {
-      // 1. Save to Database
+      // Save to Database
       const subscribersRef = rtdbRef(realtimeDb, 'subscribers');
       await push(subscribersRef, {
         email,
         subscribedAt: new Date().toISOString()
       });
 
-      // 2. Send Email via Backend
+      // Send Email via Backend (non-blocking, fire and forget)
       const backendUrl = getBackendUrl();
-      if (!backendUrl) {
-        throw new Error('Backend URL is missing. Set VITE_BACKEND_URL to your deployed backend URL.');
+      if (backendUrl) {
+        fetch(`${backendUrl}/api/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        }).catch(err => console.error('Email notification failed:', err));
       }
-      await fetch(`${backendUrl}/api/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
 
       setStatus('success');
       setEmail('');
-      setTimeout(() => setStatus(''), 5000);
+      setTimeout(() => setStatus(''), 2000);
     } catch (error) {
       console.error('Failed to subscribe:', error);
       alert('Something went wrong. Please try again.');
@@ -92,7 +91,7 @@ export default function Footer() {
       setTimeout(() => {
         setFeedbackStatus('');
         setIsFeedbackOpen(false);
-      }, 1200);
+      }, 800);
     } catch (error) {
       console.error('Failed to submit feedback:', error);
       alert('Something went wrong. Please try again.');

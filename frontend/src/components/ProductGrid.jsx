@@ -49,6 +49,11 @@ export default function ProductGrid({ onViewDetails, onEdit, onDelete, isAdmin =
   const isDateSort = sortBy === 'newest' || sortBy === 'oldest';
   const dateValue = sortBy === 'oldest' ? 'oldest' : 'newest';
 
+  const handlePageChange = (nextPage) => {
+    setCurrentPage(nextPage);
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-w-0 flex-1">
       <div className="mb-6 flex flex-col gap-3 border-b border-black/10 bg-[#f5f5f5] pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -118,7 +123,7 @@ export default function ProductGrid({ onViewDetails, onEdit, onDelete, isAdmin =
         <div className="flex items-center justify-center gap-2 pb-10">
           <button
             type="button"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className="rounded-md border border-slate-200 p-2 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Previous page"
@@ -130,7 +135,7 @@ export default function ProductGrid({ onViewDetails, onEdit, onDelete, isAdmin =
             <button
               key={page}
               type="button"
-              onClick={() => setCurrentPage(page)}
+              onClick={() => handlePageChange(page)}
               className={`h-10 min-w-[2.5rem] rounded-md text-sm font-medium transition ${
                 currentPage === page
                   ? 'bg-slate-900 text-white'
@@ -143,7 +148,7 @@ export default function ProductGrid({ onViewDetails, onEdit, onDelete, isAdmin =
 
           <button
             type="button"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
             className="rounded-md border border-slate-200 p-2 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Next page"

@@ -226,18 +226,18 @@ export default function ProductDetailsModal({ product, onClose, onSelectProduct 
               {isSoldOut ? (
                 <button
                   disabled
-                  className="w-full py-4 bg-gray-400 text-white rounded-xl font-bold tracking-widest cursor-not-allowed mb-8"
+                  className="luxury-btn secondary w-full mb-8 cursor-not-allowed opacity-80"
                 >
-                  SOLD OUT
+                  <span>SOLD OUT</span>
                 </button>
               ) : (
                 <motion.button
                   whileHover={{ scale: 1.01, backgroundColor: '#1e293b' }}
                   whileTap={{ scale: 0.99 }}
                   onClick={handleAddToBag}
-                  className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold tracking-widest hover:bg-slate-800 transition-all mb-8 shadow-xl shadow-slate-900/20"
+                  className="luxury-btn primary w-full mb-8"
                 >
-                  ADD TO BAG
+                  <span>ADD TO BAG</span>
                 </motion.button>
               )}
 

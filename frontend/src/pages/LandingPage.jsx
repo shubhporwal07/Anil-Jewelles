@@ -231,7 +231,7 @@ export default function LandingPage() {
               <p className="font-serif text-xl sm:text-3xl uppercase tracking-[0.08em] text-stone-900">Our Commitment</p>
               <button
                 type="button"
-                onClick={() => scrollToId('about')}
+                onClick={() => navigate('/about-us')}
                 className="mt-3 sm:mt-4 border-b border-stone-900 pb-1 text-xs sm:text-sm font-medium tracking-[0.18em] text-stone-900"
               >
                 Learn Our Story

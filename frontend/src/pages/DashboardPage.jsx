@@ -73,29 +73,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="border-b border-black/10 bg-[#f5f5f5]">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-4 sm:gap-6 px-4 py-6 sm:py-10 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
-          <div>
-            <h1 className="max-w-3xl font-serif text-2xl font-normal tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-[2.5rem] lg:leading-tight">
-              Your Destination for Exquisite Jewellery
-            </h1>
-            <p className="mt-2 sm:mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
-              Discover our exquisite collection of luxury jewellery.
-            </p>
-          </div>
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 lg:self-auto"
-            >
-              <Plus className="h-5 w-5" strokeWidth={1.5} />
-              Add New Product
-            </button>
-          )}
-        </div>
-      </div>
-
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8 lg:flex lg:gap-10 lg:px-8 lg:py-10">
         <button
           type="button"
